@@ -33,7 +33,7 @@ class ControllerPubNode(Node):
         if self.hand not in ["right", "left"]:
             self.get_logger().warn("Invalid 'hand' parameter! Must be 'right' or 'left'. Defaulting to 'right'.")
             self.hand = "right"
-        print("hello")
+
         # Initialize the SerialHelper with the parameters
         self.ser = SerialHelper(serial_port, baud_rate)
 
@@ -58,7 +58,7 @@ class ControllerPubNode(Node):
         try:
             # Read and process serial data
             line = self.ser.read_from_serial()
-            print(line)
+            # print(line)
             # TODO: Send data from ESP in dict format and convert it from its string representation
             if line:
                 # print(line)

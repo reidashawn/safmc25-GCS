@@ -7,7 +7,7 @@ from geometry_msgs.msg import Twist, Vector3
 from std_srvs.srv import SetBool
 from controller.helpers.button import Button
 from time import sleep
-from interfaces.srv import ToggleStepper, SetFloat
+from interfaces.srv import ToggleStepper, SetFloat, TogglePin
 
 
 
@@ -77,6 +77,7 @@ class ButtonManagerNode(Node):
             self.but2_subscriber = self.create_subscription(Int32, 'controller/left/but2', self.button2.data_callback, 10)
             self.but3_subscriber = self.create_subscription(Int32, 'controller/left/but3', self.button3.data_callback, 10)
             self.but4_subscriber = self.create_subscription(Int32, 'controller/left/but4', self.button4.data_callback, 10)
+            self.pot_subscriber = self.create_subscription(Int32, 'controller/left/pot', self.pot_callback, 10)
 
             self.get_logger().info('Left hand initialized')
 
@@ -94,7 +95,8 @@ class ButtonManagerNode(Node):
             'move_vert': self.create_client(SetFloat, '/vert_vel'),
             'lock_axis': self.create_client(SetBool, '/lock_axis'),
             'lock_zero': self.create_client(SetBool, '/lock_zero'),
-            'landing': self.create_client(SetBool, '/landing')
+            'landing': self.create_client(SetBool, '/landing'),
+            'camera': self.create_clients(TogglePin, '/set_servo')
         }
 
         # for service_name, client in self.mavros_clients.items():
@@ -293,6 +295,19 @@ class ButtonManagerNode(Node):
         self.mavros_clients['lock_zero'].call_async(request)
 
     
+    def pot_callback(self, data):
+        angle = 0
+        if data.data > 60:
+            angle = 180
+        elif data.data > 30:
+            angle = 180 * (data.data - 30)/30
+            self.get_logger().info(f"Moving camera to angle {angle}")
+        request = TogglePin.request
+        request.angle = angle
+        request.pin = 18
+        self.mavros_clients['camera'].call_async(request)
+
+
 
 def main(args=None):
     rclpy.init(args=args)

@@ -16,7 +16,7 @@ class DroneMovement(Node):
         self.debug_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.pub = self.create_publisher(Twist, '/mavros/setpoint_velocity/cmd_vel_unstamped', 10)
         self.hor_vel_sub = self.create_subscription(Twist, '/right/cmd_vel_hor', self.hor_vel_callback, 10)
-        self.yaw_vel_sub = self.create_subscription(Float32, '/right/cmd_vel_vert', self.yaw_vel_callback, 10)
+        self.yaw_vel_sub = self.create_subscription(Twist, '/left/cmd_vel_hor', self.yaw_vel_callback, 10)
         self.state_sub = self.create_subscription(State, '/mavros/state', self.state_callback, 10)
         # self.vert_vel_sub = self.create_subscription(Float32, '/left/cmd_vel_vert', self.vert_vel_callback, 10)
         self.vert_srv = self.create_service(SetFloat, '/vert_vel', self.vert_vel_srv_callback)
@@ -47,7 +47,7 @@ class DroneMovement(Node):
             msg.angular.z = float(self.angular_z)
         self.debug_pub.publish(msg)
         if not self.drone_state or self.drone_landing:
-            self.get_logger().info("Drone not activated")
+            # self.get_logger().info("Drone not activated")
             return
         
         self.pub.publish(msg)
@@ -59,7 +59,7 @@ class DroneMovement(Node):
         else:
             self.drone_state = True
     
-    def landing_callback(self, request):
+    def landing_callback(self, request, response):
         self.drone_landing = request.data
         response = SetBool.Response()
         response.success = True
@@ -84,7 +84,7 @@ class DroneMovement(Node):
         if self.axis_lock:
             self.angular_z = 0
         else:
-            self.angular_z = data.data
+            self.angular_z = data.linear.x
         self.publish_vel()
 
     def vert_vel_srv_callback(self, request, response):
