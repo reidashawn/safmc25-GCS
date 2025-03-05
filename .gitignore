@@ -1,0 +1,9 @@
+# ROS2 workspace build and install directories
+build/
+install/
+log/
+.DS_Store
+
+# Colcon metadata
+.colcon/
+**/.vscode/
