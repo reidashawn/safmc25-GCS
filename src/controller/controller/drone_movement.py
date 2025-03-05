@@ -84,7 +84,7 @@ class DroneMovement(Node):
         if self.axis_lock:
             self.angular_z = 0
         else:
-            self.angular_z = data.linear.x
+            self.angular_z = data.linear.y
         self.publish_vel()
 
     def vert_vel_srv_callback(self, request, response):

@@ -44,6 +44,7 @@ class PotConverter(Node):
 
         # Subscribe to pot topic
         self.pub = self.create_publisher(Float32, self.hand + '/cmd_vel_vert', 10)
+        self.filter_pub = self.create_publisher(Float32, self.hand + '/pot_filter', 10)
         self.subscription = self.create_subscription(Int32, 'controller/'+ self.hand +  '/pot', self.pot_callback, 10)
         
 
@@ -75,12 +76,17 @@ class PotConverter(Node):
         if 0 <= msg.data <= 4095:
             filtered_reading = self.low_pass_filter.update(msg.data)
             corresponding_value = self.calibration_data[int(filtered_reading)]
+            
+            filtered_msg = Float32()
+            filtered_msg.data = float(corresponding_value)
+            self.filter_pub.publish(filtered_msg)
+
             cmd_vel_vert = self.joystick.get_output(corresponding_value)
 
             # Publish vertical command velocity
             cmd_msg = Float32()
             cmd_msg.data = float(cmd_vel_vert)  # Example scaling
-            print(f"reading: {filtered_reading}, cali: {corresponding_value}, vel: {cmd_vel_vert}")
+            # print(f"reading: {filtered_reading}, cali: {corresponding_value}, vel: {cmd_vel_vert}")
             self.pub.publish(cmd_msg)
 
     def param_callback(self, params):

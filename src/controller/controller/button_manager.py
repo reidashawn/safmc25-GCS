@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, Float32
 from mavros_msgs.srv import CommandBool, SetMode, CommandLong
 from mavros_msgs.msg import State
 from geometry_msgs.msg import Twist, Vector3
@@ -77,7 +77,7 @@ class ButtonManagerNode(Node):
             self.but2_subscriber = self.create_subscription(Int32, 'controller/left/but2', self.button2.data_callback, 10)
             self.but3_subscriber = self.create_subscription(Int32, 'controller/left/but3', self.button3.data_callback, 10)
             self.but4_subscriber = self.create_subscription(Int32, 'controller/left/but4', self.button4.data_callback, 10)
-            self.pot_subscriber = self.create_subscription(Int32, 'controller/left/pot', self.pot_callback, 10)
+            self.pot_subscriber = self.create_subscription(Float32, '/left/pot_filter', self.pot_callback, 10)
 
             self.get_logger().info('Left hand initialized')
 
@@ -96,7 +96,7 @@ class ButtonManagerNode(Node):
             'lock_axis': self.create_client(SetBool, '/lock_axis'),
             'lock_zero': self.create_client(SetBool, '/lock_zero'),
             'landing': self.create_client(SetBool, '/landing'),
-            'camera': self.create_clients(TogglePin, '/set_servo')
+            'camera': self.create_client(TogglePin, '/set_servo')
         }
 
         # for service_name, client in self.mavros_clients.items():
@@ -297,14 +297,15 @@ class ButtonManagerNode(Node):
     
     def pot_callback(self, data):
         angle = 0
-        if data.data > 60:
+        value = data.data
+        if data.data > 35:
             angle = 180
         elif data.data > 30:
             angle = 180 * (data.data - 30)/30
-            self.get_logger().info(f"Moving camera to angle {angle}")
-        request = TogglePin.request
-        request.angle = angle
-        request.pin = 18
+            # self.get_logger().info(f"Moving camera to angle {angle}")
+        request = TogglePin.Request()
+        request.angle = int(angle)
+        request.pin = int(18)
         self.mavros_clients['camera'].call_async(request)
 
 
