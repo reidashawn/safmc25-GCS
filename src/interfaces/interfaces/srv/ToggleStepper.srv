@@ -1,0 +1,5 @@
+int32 stepper_id  # List of GPIO pin numbers
+float32 speed  # Desired speed (e.g., PWM duty cycle or stepper speed)
+---
+bool success  # Whether the operation was successful
+string message  # Status message

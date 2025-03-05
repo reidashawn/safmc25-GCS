@@ -1,0 +1,5 @@
+int32 pin       # GPIO pin number
+int32 angle     # Desired state: True (ON) or False (OFF)
+---
+bool success    # Whether the operation was successful
+string message  # Status message
