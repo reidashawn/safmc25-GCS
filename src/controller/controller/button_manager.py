@@ -298,10 +298,10 @@ class ButtonManagerNode(Node):
     def pot_callback(self, data):
         angle = 0
         value = data.data
-        if data.data > 35:
-            angle = 180
-        elif data.data > 30:
-            angle = 180 * (data.data - 30)/30
+        if data.data > 50:
+            angle = 90
+        elif data.data > 20:
+            angle = 90 * (data.data - 20)/20
             # self.get_logger().info(f"Moving camera to angle {angle}")
         request = TogglePin.Request()
         request.angle = int(angle)

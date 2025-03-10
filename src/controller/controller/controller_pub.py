@@ -58,7 +58,7 @@ class ControllerPubNode(Node):
         try:
             # Read and process serial data
             line = self.ser.read_from_serial()
-            # print(line)
+            print(line)
             # TODO: Send data from ESP in dict format and convert it from its string representation
             if line:
                 # print(line)
