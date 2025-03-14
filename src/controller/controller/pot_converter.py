@@ -108,7 +108,7 @@ class PotConverter(Node):
         corresponding_value = self.calibration_data[int(self.low_pass_filter.filtered_value)]
         self.joystick.recenter(center=corresponding_value)
         response.success = True
-        self.get_logger().info(f"Potentiometer recentered to {corresponding_value}")
+        # self.get_logger().info(f"Potentiometer recentered to {corresponding_value}")
         return response
 
 def main(args=None):

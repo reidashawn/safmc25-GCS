@@ -20,7 +20,7 @@ class ImuConverter(Node):
         self.declare_parameter('hand', 'right')  # Declare 'hand' parameter
 
     # Declare parameters with default values
-        self.declare_parameter('beta', 0.2)
+        self.declare_parameter('beta', 0.35)
         self.declare_parameter('zeta', 0.3)
         self.declare_parameter('zero', 0)
         self.declare_parameter('max_vel', 1.0)
@@ -209,6 +209,9 @@ class ImuConverter(Node):
 
     def center_imu(self, request, response):
         pitch, yaw, roll = self.madgwick.quaternion.to_euler_angles()
+        if self.hand == "left":
+            roll = -roll
+            pitch = -pitch
         pitch_max = self.max_imu_pitch - self.zero_imu_pitch + pitch
         pitch_min = pitch - (self.zero_imu_pitch - self.min_imu_pitch)
         self.pitch_joystick.recenter(center=pitch, min_input=pitch_min, max_input=pitch_max)
@@ -216,7 +219,8 @@ class ImuConverter(Node):
         roll_min = roll - (self.zero_imu_roll - self.min_imu_roll)
         self.roll_joystick.recenter(center=roll, min_input=roll_min, max_input=roll_max)
         response.success = True
-        self.get_logger().info(f"IMU recentered to pitch {pitch}, roll {roll}")
+        if self.hand == 'left':
+            self.get_logger().info(f"IMU recentered to roll {roll_min} {roll} {roll_max}")
         return response
 
 def main(args=None):
