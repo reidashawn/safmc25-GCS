@@ -1,30 +1,40 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Float64
 from std_srvs.srv import SetBool
 from mavros_msgs.msg import State
 from interfaces.srv import SetFloat
+from controller.helpers.converter import LocalToNEDConverter
 import time
 import threading
 
 class DroneMovement(Node):
     def __init__(self):
         super().__init__('drone_movement')
+        
+        self.converter = LocalToNEDConverter(None)
 
         # Subscribe to pot topic
         self.debug_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.debug_pub_gps = self.create_publisher(Twist, '/cmd_vel_gps', 10)
         self.pub = self.create_publisher(Twist, '/mavros/setpoint_velocity/cmd_vel_unstamped', 10)
         self.hor_vel_sub = self.create_subscription(Twist, '/right/cmd_vel_hor', self.hor_vel_callback, 10)
         self.yaw_vel_sub = self.create_subscription(Twist, '/left/cmd_vel_hor', self.yaw_vel_callback, 10)
+        self.heading_sub = self.create_subscription(Float64, '/mavros/global_position/compass_hdg', self.heading_callback, 10)
         self.state_sub = self.create_subscription(State, '/mavros/state', self.state_callback, 10)
         # self.vert_vel_sub = self.create_subscription(Float32, '/left/cmd_vel_vert', self.vert_vel_callback, 10)
+        
         self.vert_srv = self.create_service(SetFloat, '/vert_vel', self.vert_vel_srv_callback)
         self.lock_srv = self.create_service(SetBool, '/lock_axis', self.lock_axis_callback)
         self.lock_zero_srv = self.create_service(SetBool, '/lock_zero', self.lock_zero_callback)
         self.land_srv = self.create_service(SetBool, '/landing', self.landing_callback)
+        
         self.linear_x = 0
         self.linear_y = 0
+        self.gps_x = 0
+        self.gps_y = 0
+        self.heading = None
         self.linear_z = 0
         self.angular_z = 0
         self.zero_lock = False
@@ -34,6 +44,7 @@ class DroneMovement(Node):
 
     def publish_vel(self):
         msg = Twist()
+        gps_msg = Twist()
         if self.zero_lock:
             msg.linear.x = 0.0
             msg.linear.y = 0.0
@@ -48,6 +59,11 @@ class DroneMovement(Node):
         # if not (msg.linear.x == 0 and msg.linear.y == 0 and 
         #         msg.linear.z == 0 and msg.angular.z == 0 and 
         #         not self.zero_lock):
+
+        gps_coords = self.converter.transform_to_ned([msg.linear.y, msg.linear.x])
+        if gps_coords:
+            gps_msg.linear.y, gps_msg.linear.x = gps_coords
+        self.debug_pub_gps.publish(gps_msg)
         self.debug_pub.publish(msg)
         if not self.drone_state or self.drone_landing or (
             msg.linear.x == 0 and msg.linear.y == 0 and 
@@ -57,7 +73,7 @@ class DroneMovement(Node):
             # self.get_logger().info("Drone not activated")
             return
         
-        self.pub.publish(msg)
+        self.pub.publish(gps_msg)
         return
     def state_callback(self, msg):
         if msg.system_status != 4:
@@ -75,15 +91,15 @@ class DroneMovement(Node):
     def hor_vel_callback(self, data):
         if not self.axis_lock:
             if abs(data.linear.x) > abs(data.linear.y):
-                self.linear_y = -data.linear.x
+                self.linear_y = data.linear.x
                 self.linear_x = 0
             else:
-                self.linear_x = data.linear.y
+                self.linear_x = -data.linear.y
                 self.linear_y = 0
             self.angular_z = 0
         else:
-            self.linear_x = data.linear.y
-            self.linear_y = -data.linear.x
+            self.linear_x = -data.linear.y
+            self.linear_y = data.linear.x
         self.publish_vel()
 
 
@@ -99,6 +115,10 @@ class DroneMovement(Node):
         response.success = True
         self.publish_vel()
         return response
+
+    def heading_callback(self, data):
+        self.heading = data
+        self.converter.set_heading(float(data.data))
     
     def lock_zero_callback(self, request, response):
         self.zero_lock = request.data
