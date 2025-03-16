@@ -45,8 +45,15 @@ class DroneMovement(Node):
             msg.linear.y = float(self.linear_y)
             msg.linear.z = float(self.linear_z)
             msg.angular.z = float(self.angular_z)
+        # if not (msg.linear.x == 0 and msg.linear.y == 0 and 
+        #         msg.linear.z == 0 and msg.angular.z == 0 and 
+        #         not self.zero_lock):
         self.debug_pub.publish(msg)
-        if not self.drone_state or self.drone_landing:
+        if not self.drone_state or self.drone_landing or (
+            msg.linear.x == 0 and msg.linear.y == 0 and 
+            msg.linear.z == 0 and msg.angular.z == 0 and 
+            not self.zero_lock
+        ):
             # self.get_logger().info("Drone not activated")
             return
         
@@ -66,7 +73,7 @@ class DroneMovement(Node):
         return response
 
     def hor_vel_callback(self, data):
-        if self.axis_lock:
+        if not self.axis_lock:
             if abs(data.linear.x) > abs(data.linear.y):
                 self.linear_y = -data.linear.x
                 self.linear_x = 0
@@ -81,7 +88,7 @@ class DroneMovement(Node):
 
 
     def yaw_vel_callback(self, data):
-        if self.axis_lock:
+        if not self.axis_lock:
             self.angular_z = 0
         else:
             self.angular_z = data.linear.y
