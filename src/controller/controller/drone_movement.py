@@ -3,7 +3,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32
 from std_srvs.srv import SetBool
-from mavros_msgs.msg import State
+from mavros_msgs.msg import State, OverrideRCIn
 from interfaces.srv import SetFloat
 import time
 import threading
@@ -12,9 +12,12 @@ class DroneMovement(Node):
     def __init__(self):
         super().__init__('drone_movement')
 
+        self.min_rc = 1400
+        self.max_rc = 1600
+
         # Subscribe to pot topic
         self.debug_pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.pub = self.create_publisher(Twist, '/mavros/setpoint_velocity/cmd_vel_unstamped', 10)
+        self.pub = self.create_publisher(OverrideRCIn, '/mavros/rc/override', 10)
         self.hor_vel_sub = self.create_subscription(Twist, '/right/cmd_vel_hor', self.hor_vel_callback, 10)
         self.yaw_vel_sub = self.create_subscription(Twist, '/left/cmd_vel_hor', self.yaw_vel_callback, 10)
         self.state_sub = self.create_subscription(State, '/mavros/state', self.state_callback, 10)
@@ -34,17 +37,28 @@ class DroneMovement(Node):
 
     def publish_vel(self):
         msg = Twist()
+        rc_msg = OverrideRCIn()
         if self.zero_lock:
             msg.linear.x = 0.0
             msg.linear.y = 0.0
             msg.linear.z = 0.0
             msg.angular.z = 0.0
+            for i in rc_msg.channels:
+                i = 0
             self.get_logger().info("zero lock")
         else:
-            msg.linear.x = float(self.linear_x)
-            msg.linear.y = float(self.linear_y)
-            msg.linear.z = float(self.linear_z)
-            msg.angular.z = float(self.angular_z)
+            pitch = self.min_rc * (self.max_rc - self.min_rc)* self.linear_y/.1
+            roll = self.min_rc * (self.max_rc - self.min_rc)* self.linear_x/.1
+            yaw = self.min_rc * (self.max_rc - self.min_rc)* self.angular_z/.1
+            thrust = self.min_rc * (self.max_rc - self.min_rc)* self.linear_z/.1
+            rc_msg.channels[0] = int(pitch)
+            rc_msg.channels[1] = int(roll)
+            rc_msg.channels[2] = int(thrust)
+            rc_msg.channels[3] = int(yaw)
+            msg.linear.x = float(roll)
+            msg.linear.y = float(pitch)
+            msg.linear.z = float(thrust)
+            msg.angular.z = float(yaw)
         # if not (msg.linear.x == 0 and msg.linear.y == 0 and 
         #         msg.linear.z == 0 and msg.angular.z == 0 and 
         #         not self.zero_lock):
@@ -57,7 +71,7 @@ class DroneMovement(Node):
             # self.get_logger().info("Drone not activated")
             return
         
-        self.pub.publish(msg)
+        self.pub.publish(rc_msg)
         return
     def state_callback(self, msg):
         if msg.system_status != 4:
