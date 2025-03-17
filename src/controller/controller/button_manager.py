@@ -145,6 +145,9 @@ class ButtonManagerNode(Node):
         elif not self.drone_state:
             self.takeoff()
             self.get_logger().info("Taking off")
+        elif self.drone_state:
+            self._change_mode('LOITER')
+            self.get_logger().info("Setting mode to loiter")
 
     def arm_callback(self):
         self.arm_drone()
