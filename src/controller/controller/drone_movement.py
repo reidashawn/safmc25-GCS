@@ -47,7 +47,7 @@ class DroneMovement(Node):
                 i = 0
             self.get_logger().info("zero lock")
         else:
-            pitch = self.min_rc + (self.max_rc - self.min_rc)* (self.linear_y+.1)/.2
+            pitch = self.min_rc + (self.max_rc - self.min_rc)* (.1-self.linear_y)/.2
             roll = self.min_rc + (self.max_rc - self.min_rc)* (.1-self.linear_x)/.2
             yaw = self.min_rc + (self.max_rc - self.min_rc)* (self.angular_z+.1)/.2
             thrust = self.min_rc + (self.max_rc - self.min_rc)* (self.linear_z+.1)/.2
@@ -92,7 +92,7 @@ class DroneMovement(Node):
         return response
 
     def hor_vel_callback(self, data):
-        if not self.axis_lock:
+        if self.axis_lock:
             if abs(data.linear.x) > abs(data.linear.y):
                 self.linear_y = -data.linear.x
                 self.linear_x = 0

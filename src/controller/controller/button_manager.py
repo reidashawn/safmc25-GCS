@@ -15,7 +15,8 @@ VALID_MODES = [
     'GUIDED',
     'LAND',
     'STABILIZE',
-    'LOITER'
+    'LOITER',
+    'ALT_HOLD'
 ]
 
 TAKEOFF_HEIGHT = 1.0
@@ -28,7 +29,8 @@ class ButtonManagerNode(Node):
         'GUIDED',
         'LAND',
         'STABILIZE',
-        'LOITER'
+        'LOITER',
+        'ALT_HOLD'
     ]
 
     TAKEOFF_HEIGHT = 1.0
@@ -146,7 +148,7 @@ class ButtonManagerNode(Node):
             self.takeoff()
             self.get_logger().info("Taking off")
         elif self.drone_state:
-            self._change_mode('LOITER')
+            self._change_mode('ALT_HOLD')
             self.get_logger().info("Setting mode to loiter")
 
     def arm_callback(self):
@@ -302,9 +304,9 @@ class ButtonManagerNode(Node):
         angle = 0
         value = data.data
         if data.data > 50:
-            angle = 90
+            angle = 150
         elif data.data > 20:
-            angle = 90 * (data.data - 20)/20
+            angle = 150 * (data.data - 20)/20
             # self.get_logger().info(f"Moving camera to angle {angle}")
         request = TogglePin.Request()
         request.angle = int(angle)
