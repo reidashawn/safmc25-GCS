@@ -304,9 +304,9 @@ class ButtonManagerNode(Node):
         angle = 0
         value = data.data
         if data.data < 10:
-            angle = 150
-        elif data.data < 45:
-            angle = 150 * (45- data.data)/35
+            angle = 125
+        elif data.data < 60:
+            angle = 125 * (60- data.data)/50
         # self.get_logger().info(f"Moving camera to angle {angle}")
         request = TogglePin.Request()
         request.angle = int(angle)

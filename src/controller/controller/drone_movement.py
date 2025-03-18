@@ -14,6 +14,8 @@ class DroneMovement(Node):
 
         self.min_rc = 1300
         self.max_rc = 1700
+        self.thrust_min_rc = 1300
+        self.thrust_max_rc = 1700
 
         # Subscribe to pot topic
         self.debug_pub = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -50,7 +52,7 @@ class DroneMovement(Node):
             pitch = self.min_rc + (self.max_rc - self.min_rc)* (.1-self.linear_y)/.2
             roll = self.min_rc + (self.max_rc - self.min_rc)* (.1-self.linear_x)/.2
             yaw = self.min_rc + (self.max_rc - self.min_rc)* (self.angular_z+.1)/.2
-            thrust = self.min_rc + (self.max_rc - self.min_rc)* (self.linear_z+.1)/.2
+            thrust = self.thrust_min_rc + (self.thrust_max_rc - self.thrust_min_rc)* (self.linear_z+.1)/.2
             # pitch = self.linear_y/.2
             # roll =  self.linear_x/.2
             # yaw = self.angular_z/.2
