@@ -148,7 +148,7 @@ class ButtonManagerNode(Node):
             self.takeoff()
             self.get_logger().info("Taking off")
         elif self.drone_state:
-            self._change_mode('ALT_HOLD')
+            self._change_mode('LOITER')
             self.get_logger().info("Setting mode to loiter")
 
     def arm_callback(self):
@@ -303,11 +303,11 @@ class ButtonManagerNode(Node):
     def pot_callback(self, data):
         angle = 0
         value = data.data
-        if data.data > 50:
+        if data.data < 10:
             angle = 150
-        elif data.data > 20:
-            angle = 150 * (data.data - 20)/20
-            # self.get_logger().info(f"Moving camera to angle {angle}")
+        elif data.data < 45:
+            angle = 150 * (45- data.data)/35
+        # self.get_logger().info(f"Moving camera to angle {angle}")
         request = TogglePin.Request()
         request.angle = int(angle)
         request.pin = int(18)

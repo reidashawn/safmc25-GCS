@@ -12,8 +12,8 @@ class DroneMovement(Node):
     def __init__(self):
         super().__init__('drone_movement')
 
-        self.min_rc = 1400
-        self.max_rc = 1600
+        self.min_rc = 1300
+        self.max_rc = 1700
 
         # Subscribe to pot topic
         self.debug_pub = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -107,10 +107,10 @@ class DroneMovement(Node):
 
 
     def yaw_vel_callback(self, data):
-        if not self.axis_lock:
+        if self.axis_lock:
             self.angular_z = 0
         else:
-            self.angular_z = data.linear.y
+            self.angular_z = -data.linear.y
         self.publish_vel()
 
     def vert_vel_srv_callback(self, request, response):
