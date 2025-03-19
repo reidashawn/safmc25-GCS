@@ -14,6 +14,11 @@ class DroneMovement(Node):
 
         self.min_rc = 1400
         self.max_rc = 1600
+        self.thrust_min_rc = 1350
+        self.thrust_max_rc = 1650
+        self.pitch_min_rc = 1300
+        self.pitch_max_rc = 1700
+        
 
         # Subscribe to pot topic
         self.debug_pub = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -47,10 +52,10 @@ class DroneMovement(Node):
                 i = 0
             self.get_logger().info("zero lock")
         else:
-            pitch = self.min_rc + (self.max_rc - self.min_rc)* (self.linear_y+.1)/.2
+            pitch = self.pitch_min_rc + (self.pitch_max_rc - self.pitch_min_rc)* (.1-self.linear_y)/.2
             roll = self.min_rc + (self.max_rc - self.min_rc)* (.1-self.linear_x)/.2
             yaw = self.min_rc + (self.max_rc - self.min_rc)* (self.angular_z+.1)/.2
-            thrust = self.min_rc + (self.max_rc - self.min_rc)* (self.linear_z+.1)/.2
+            thrust = self.thrust_min_rc + (self.thrust_max_rc - self.thrust_min_rc)* (self.linear_z+.1)/.2
             # pitch = self.linear_y/.2
             # roll =  self.linear_x/.2
             # yaw = self.angular_z/.2
@@ -92,7 +97,7 @@ class DroneMovement(Node):
         return response
 
     def hor_vel_callback(self, data):
-        if not self.axis_lock:
+        if self.axis_lock:
             if abs(data.linear.x) > abs(data.linear.y):
                 self.linear_y = -data.linear.x
                 self.linear_x = 0
@@ -107,10 +112,10 @@ class DroneMovement(Node):
 
 
     def yaw_vel_callback(self, data):
-        if not self.axis_lock:
+        if self.axis_lock:
             self.angular_z = 0
         else:
-            self.angular_z = data.linear.y
+            self.angular_z = -data.linear.y
         self.publish_vel()
 
     def vert_vel_srv_callback(self, request, response):

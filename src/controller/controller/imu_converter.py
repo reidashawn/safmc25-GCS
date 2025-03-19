@@ -20,7 +20,7 @@ class ImuConverter(Node):
         self.declare_parameter('hand', 'right')  # Declare 'hand' parameter
 
     # Declare parameters with default values
-        self.declare_parameter('beta', 0.3)
+        self.declare_parameter('beta', 0.33)
         self.declare_parameter('zeta', 0.3)
         self.declare_parameter('zero', 0)
         self.declare_parameter('max_vel', 1.0)
