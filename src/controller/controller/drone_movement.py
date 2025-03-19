@@ -52,7 +52,7 @@ class DroneMovement(Node):
                 i = 0
             self.get_logger().info("zero lock")
         else:
-            pitch = self.pitch_min_rc + (self.pitch_max_rc - self.pitch_min_rc)* (.1-self.linear_y)/.2
+            pitch = self.min_rc + (self.max_rc - self.min_rc)* (self.linear_y+.1)/.2
             roll = self.min_rc + (self.max_rc - self.min_rc)* (.1-self.linear_x)/.2
             yaw = self.min_rc + (self.max_rc - self.min_rc)* (self.angular_z+.1)/.2
             thrust = self.thrust_min_rc + (self.thrust_max_rc - self.thrust_min_rc)* (self.linear_z+.1)/.2
